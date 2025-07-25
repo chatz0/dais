@@ -1,0 +1,23 @@
+
+{
+  "name": "dais",
+  "version": "1.0.0",
+  "private": true,
+  "homepage": "https://chatz0.github.io/dais",
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.17.0",
+    "react-scripts": "5.0.1",
+    "react-force-graph": "1.41.0"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d build"
+  },
+  "devDependencies": {
+    "gh-pages": "^6.0.0"
+  }
+}
