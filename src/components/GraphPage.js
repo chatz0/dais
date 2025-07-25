@@ -1,5 +1,7 @@
 import React, { useRef, useState } from 'react';
-import ForceGraph2D from 'react-force-graph-2d';
+import { ForceGraph2D } from 'react-force-graph';
+
+
 
 const GraphPage = () => {
   const fgRef = useRef();

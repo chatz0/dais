@@ -1,15 +1,13 @@
-
 {
   "name": "dais",
   "version": "1.0.0",
   "private": true,
-  "homepage": "https://chatz0.github.io/dais",
   "dependencies": {
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "react-force-graph": "^1.41.0",
     "react-router-dom": "^6.17.0",
-    "react-scripts": "5.0.1",
-    "react-force-graph": "1.41.0"
+    "react-scripts": "5.0.1"
   },
   "scripts": {
     "start": "react-scripts start",
@@ -19,5 +17,17 @@
   },
   "devDependencies": {
     "gh-pages": "^6.0.0"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
   }
 }
