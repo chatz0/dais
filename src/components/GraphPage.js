@@ -1,32 +1,31 @@
 import React, { useEffect, useRef } from 'react';
-import ForceGraph2D from 'react-force-graph-2d';
+import { ForceGraph2D } from 'react-force-graph';
 import { useNavigate } from 'react-router-dom';
 
-// Node data with correct icon sources
+// Nodes with icons (CDN for LinkedIn/DBLP/Scholar, local for UCD)
 const nodes = [
   {
     id: 'cv',
     name: 'CV',
-    icon: 'https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/linkedin.svg', // LinkedIn (CDN)
+    icon: 'https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/linkedin.svg',
   },
   {
     id: 'dblp',
     name: 'DBLP',
-    icon: 'https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/dblp.svg', // DBLP (CDN)
+    icon: 'https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/dblp.svg',
   },
   {
     id: 'scholar',
     name: 'Google Scholar',
-    icon: 'https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/googlescholar.svg', // Scholar (CDN)
+    icon: 'https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/googlescholar.svg',
   },
   {
     id: 'ucd',
     name: 'UCD',
-    icon: `${process.env.PUBLIC_URL}/icons/ucd.png`, // Local icon from public/icons
+    icon: `${process.env.PUBLIC_URL}/icons/ucd.png`, // Local icon
   },
 ];
 
-// Links (if you have navigation between nodes)
 const links = [
   { source: 'cv', target: 'dblp' },
   { source: 'dblp', target: 'scholar' },
@@ -39,7 +38,7 @@ const GraphPage = () => {
 
   useEffect(() => {
     if (fgRef.current) {
-      fgRef.current.d3Force('charge').strength(-200);
+      fgRef.current.d3Force('charge').strength(-200); // Spread out nodes
     }
   }, []);
 
@@ -52,11 +51,11 @@ const GraphPage = () => {
           const img = new Image();
           img.src = node.icon;
           img.onload = () => {
-            ctx.drawImage(img, node.x - 15, node.y - 15, 30, 30); // Centered 30x30 icon
+            ctx.drawImage(img, node.x - 15, node.y - 15, 30, 30); // Draw icon centered
           };
         }}
         onNodeClick={(node) => {
-          // Optional navigation (customize per node)
+          // Handle clicks
           if (node.id === 'cv') navigate('/cv');
           else if (node.id === 'dblp') window.open('https://dblp.org/pid/135/6249.html', '_blank');
           else if (node.id === 'scholar') window.open('https://scholar.google.com.hk/citations?hl=en&user=vXz1bl4AAAAJ', '_blank');
