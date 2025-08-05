@@ -2,7 +2,6 @@
   "name": "dais",
   "version": "1.0.0",
   "private": true,
-  "homepage": "https://chatz0.github.io/dais",
   "dependencies": {
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
