@@ -9,9 +9,9 @@ npm run build
 
 echo "📦 Deploying to gh-pages..."
 
-# Ensure gh-pages branch exists remotely
-if ! git ls-remote --exit-code --heads origin gh-pages; then
-  echo "Creating remote gh-pages branch..."
+# Create gh-pages branch if it doesn’t exist
+if ! git show-ref --verify --quiet refs/heads/gh-pages; then
+  echo "Creating gh-pages branch..."
   git checkout --orphan gh-pages
   git reset --hard
   git commit --allow-empty -m "Initial gh-pages commit"
@@ -19,21 +19,24 @@ if ! git ls-remote --exit-code --heads origin gh-pages; then
   git checkout main
 fi
 
-# Remove any stale worktree
-git worktree prune
+# Prepare a clean worktree for gh-pages
 rm -rf /tmp/gh-pages
-
-# Create worktree and copy files
+git worktree prune
 git worktree add /tmp/gh-pages gh-pages
-rsync -av build/ /tmp/gh-pages/ --delete
 
+# Remove old files in gh-pages (but keep .git)
+rm -rf /tmp/gh-pages/*
+
+# Copy new build files into gh-pages
+cp -R build/* /tmp/gh-pages/
+
+# Commit and push changes
 cd /tmp/gh-pages
 git add --all
-git commit -m "Deploy build to gh-pages"
+git commit -m "Deploy build to gh-pages" || echo "No changes to commit"
 git push origin gh-pages
 
+# Return to project directory
 cd -
-git worktree remove /tmp/gh-pages --force
-
-echo "✅ Deployment complete! Your site should be live at: https://chatz0.github.io/dais"
+echo "✅ Deployment complete! Site is live at: https://chatz0.github.io/dais"
 

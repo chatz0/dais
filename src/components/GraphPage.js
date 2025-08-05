@@ -1,94 +1,73 @@
-import React, { useRef, useEffect, useState } from 'react';
-import { ForceGraph2D } from 'react-force-graph';
-import { useNavigate } from 'react-router-dom';
+// src/components/GraphPage.js
+import React, { useRef, useEffect } from 'react';
+import ForceGraph2D from 'react-force-graph-2d';
 
-const GraphPage = () => {
-  const navigate = useNavigate();
-  const graphRef = useRef();
+export default function GraphPage() {
+  const fgRef = useRef();
 
-  // Base nodes
-  const [graphData, setGraphData] = useState({
+  const data = {
     nodes: [
-      { id: 'About', icon: `${process.env.PUBLIC_URL}/icons/ucd.png`, main: true },
-      { id: 'Research', icon: 'https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/google-scholar.svg', main: true },
-      { id: 'Teaching', icon: 'https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/linkedin.svg', main: true }
+      { id: 'profile', name: 'Profile', fx: 0, fy: 0 },
+      { id: 'research', name: 'Research' },
+      { id: 'teaching', name: 'Teaching' },
+      { id: 'cv', name: 'CV' },
+      { id: 'contact', name: 'Contact' }
     ],
     links: [
-      { source: 'About', target: 'Research' },
-      { source: 'About', target: 'Teaching' }
+      { source: 'profile', target: 'research' },
+      { source: 'profile', target: 'teaching' },
+      { source: 'profile', target: 'cv' },
+      { source: 'profile', target: 'contact' }
     ]
-  });
-
-  // Handle node clicks
-  const handleNodeClick = node => {
-    if (node.id === 'Research') {
-      setGraphData(prev => ({
-        nodes: [
-          ...prev.nodes,
-          { id: 'Publications', icon: 'https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/dblp.svg' },
-          { id: 'Projects', icon: 'https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/google-scholar.svg' }
-        ],
-        links: [
-          ...prev.links,
-          { source: 'Research', target: 'Publications' },
-          { source: 'Research', target: 'Projects' }
-        ]
-      }));
-    } else if (node.id === 'CV') {
-      navigate('/cv');
-    } else if (node.id === 'Contact') {
-      navigate('/contact');
-    }
   };
 
-  // Floating animation
   useEffect(() => {
-    const interval = setInterval(() => {
-      if (graphRef.current) {
-        graphRef.current.d3Force('charge').strength(-250); // repulsion for better spacing
-        graphRef.current.d3AlphaTarget(0.1);
-        graphRef.current.refresh();
-      }
-    }, 2000);
-    return () => clearInterval(interval);
+    if (!fgRef.current) return;
+    // “Decay” controls how quickly the simulation cools; small = longer float
+    fgRef.current.d3AlphaDecay(0.02);
+    // Repel nodes
+    fgRef.current.d3Force('charge').strength(-200);
+    // Gentle pull towards center
+    fgRef.current.d3Force('center').strength(0.05);
   }, []);
 
   return (
-    <div style={{ width: '100vw', height: '100vh', backgroundColor: '#0a0a0a' }}>
+    <div style={{ width: '100vw', height: '100vh', background: '#111' }}>
       <ForceGraph2D
-        ref={graphRef}
-        graphData={graphData}
+        ref={fgRef}
+        graphData={data}
+        nodeRelSize={14}
+        linkColor={() => 'rgba(0,255,0,0.2)'}
+        linkWidth={1.2}
         nodeCanvasObject={(node, ctx, globalScale) => {
-          const size = 40;
-          const img = new Image();
-          img.src = node.icon;
-
-          ctx.save();
+          const { x, y } = node;
+          if (!isFinite(x) || !isFinite(y)) return;
+          const r = 18;
+          // glow gradient
+          const grad = ctx.createRadialGradient(x, y, 0, x, y, r);
+          grad.addColorStop(0, 'rgba(0,255,0,0.8)');
+          grad.addColorStop(1, 'rgba(0,255,0,0)');
           ctx.beginPath();
-          ctx.arc(node.x, node.y, size / 2, 0, 2 * Math.PI, false);
-          ctx.fillStyle = '#00ff88';
+          ctx.arc(x, y, r, 0, 2 * Math.PI);
+          ctx.fillStyle = grad;
           ctx.fill();
-          ctx.closePath();
-
-          img.onload = () => {
-            ctx.drawImage(img, node.x - size / 2, node.y - size / 2, size, size);
+          // label
+          ctx.font = `${12/globalScale}px sans-serif`;
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillStyle = '#fff';
+          ctx.fillText(node.name, x, y + (r+6)/globalScale);
+        }}
+        onNodeClick={node => {
+          const routes = {
+            research: '/research',
+            teaching: '/teaching',
+            cv: '/cv',
+            contact: '/contact'
           };
-          ctx.restore();
+          if (routes[node.id]) window.location.assign(routes[node.id]);
         }}
-        nodePointerAreaPaint={(node, color, ctx) => {
-          const size = 40;
-          ctx.fillStyle = color;
-          ctx.beginPath();
-          ctx.arc(node.x, node.y, size / 2, 0, 2 * Math.PI, false);
-          ctx.fill();
-        }}
-        linkColor={() => '#00ff88'}
-        linkWidth={2}
-        onNodeClick={handleNodeClick}
-        cooldownTicks={100}
       />
     </div>
   );
-};
-
-export default GraphPage;
+}
