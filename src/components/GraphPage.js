@@ -1,73 +1,81 @@
 // src/components/GraphPage.js
 import React, { useRef, useEffect } from 'react';
 import ForceGraph2D from 'react-force-graph-2d';
+import { useNavigate } from 'react-router-dom';
 
-export default function GraphPage() {
-  const fgRef = useRef();
+const ICON_URLS = {
+  home:    `${process.env.PUBLIC_URL}/icons/home.png`,
+  cv:      `${process.env.PUBLIC_URL}/icons/cv.png`,
+  contact: `${process.env.PUBLIC_URL}/icons/contact.png`
+};
 
-  const data = {
-    nodes: [
-      { id: 'profile', name: 'Profile', fx: 0, fy: 0 },
-      { id: 'research', name: 'Research' },
-      { id: 'teaching', name: 'Teaching' },
-      { id: 'cv', name: 'CV' },
-      { id: 'contact', name: 'Contact' }
-    ],
-    links: [
-      { source: 'profile', target: 'research' },
-      { source: 'profile', target: 'teaching' },
-      { source: 'profile', target: 'cv' },
-      { source: 'profile', target: 'contact' }
-    ]
-  };
+const GraphPage = () => {
+  const fgRef    = useRef();
+  const navigate = useNavigate();
+  // store Image objects here
+  const icons    = useRef({});
 
+  // preload icons and tweak forces
   useEffect(() => {
-    if (!fgRef.current) return;
-    // “Decay” controls how quickly the simulation cools; small = longer float
-    fgRef.current.d3AlphaDecay(0.02);
-    // Repel nodes
+    Object.entries(ICON_URLS).forEach(([id, url]) => {
+      const img = new Image();
+      img.src = url;
+      // when each image loads, trigger a redraw
+      img.onload = () => {
+        if (fgRef.current) fgRef.current.refresh();
+      };
+      icons.current[id] = img;
+    });
+
+    // ease off the repulsion so nodes spread out more
     fgRef.current.d3Force('charge').strength(-200);
-    // Gentle pull towards center
+    // slight centering force
     fgRef.current.d3Force('center').strength(0.05);
   }, []);
 
+  // your graph data
+  const graphData = {
+    nodes: [
+      { id: 'home'    },
+      { id: 'cv'      },
+      { id: 'contact' }
+    ],
+    links: [
+      { source: 'home',    target: 'cv'      },
+      { source: 'home',    target: 'contact' }
+    ]
+  };
+
   return (
-    <div style={{ width: '100vw', height: '100vh', background: '#111' }}>
+    <div style={{ height: '100vh', background: '#111' }}>
       <ForceGraph2D
         ref={fgRef}
-        graphData={data}
-        nodeRelSize={14}
-        linkColor={() => 'rgba(0,255,0,0.2)'}
-        linkWidth={1.2}
+        graphData={graphData}
         nodeCanvasObject={(node, ctx, globalScale) => {
-          const { x, y } = node;
-          if (!isFinite(x) || !isFinite(y)) return;
-          const r = 18;
-          // glow gradient
-          const grad = ctx.createRadialGradient(x, y, 0, x, y, r);
-          grad.addColorStop(0, 'rgba(0,255,0,0.8)');
-          grad.addColorStop(1, 'rgba(0,255,0,0)');
+          const R = 20; // radius
+
+          // 1) draw the circle
           ctx.beginPath();
-          ctx.arc(x, y, r, 0, 2 * Math.PI);
-          ctx.fillStyle = grad;
+          ctx.arc(node.x, node.y, R, 0, 2 * Math.PI, false);
+          ctx.fillStyle = 'rgba(0, 255, 100, 0.6)';
           ctx.fill();
-          // label
-          ctx.font = `${12/globalScale}px sans-serif`;
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'middle';
-          ctx.fillStyle = '#fff';
-          ctx.fillText(node.name, x, y + (r+6)/globalScale);
+
+          // 2) if the icon is loaded, draw it
+          const img = icons.current[node.id];
+          if (img?.complete && img.naturalWidth > 0) {
+            ctx.drawImage(
+              img,
+              node.x - R,
+              node.y - R,
+              R * 2,
+              R * 2
+            );
+          }
         }}
-        onNodeClick={node => {
-          const routes = {
-            research: '/research',
-            teaching: '/teaching',
-            cv: '/cv',
-            contact: '/contact'
-          };
-          if (routes[node.id]) window.location.assign(routes[node.id]);
-        }}
+        onNodeClick={node => navigate(`/${node.id}`)}
       />
     </div>
   );
-}
+};
+
+export default GraphPage;
