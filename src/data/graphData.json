@@ -1,0 +1,11 @@
+{
+  "nodes": [
+    { "id": "Home",    "group": 1, "url": "/dais/" },
+    { "id": "CV",      "group": 2, "url": "/dais/cv" },
+    { "id": "Contact", "group": 3, "url": "/dais/contact" }
+  ],
+  "links": [
+    { "source": "Home",    "target": "CV" },
+    { "source": "Home",    "target": "Contact" }
+  ]
+}

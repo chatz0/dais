@@ -11,13 +11,13 @@ export default function GraphPage() {
 
     // repulsive force between nodes
     fg.d3Force('charge').strength(-200);
-    // link length + stiffness
+    // link distance + stiffness
     fg.d3Force('link').distance(120).strength(0.8);
-    // how quickly the simulation cools down (was d3VelocityDecay)
+    // simulation cooling
     fg.d3AlphaDecay(0.4);
-    // center-pull force
+    // center pull
     fg.d3Force('center').strength(0.05);
-    // kick off the simulation fresh
+    // re-kick the sim
     fg.alpha(1).restart();
   }, []);
 
@@ -31,15 +31,15 @@ export default function GraphPage() {
         nodeAutoColorBy="group"
         onNodeClick={node => window.location.href = node.url}
         nodeCanvasObject={(node, ctx, globalScale) => {
-          const label = node.id;
-          const fontSize = 12 / globalScale;
-          ctx.font = `${fontSize}px Sans-Serif`;
-          ctx.fillStyle = node.color || '#fff';
+          // draw circle
           ctx.beginPath();
           ctx.arc(node.x, node.y, 8 / globalScale, 0, 2 * Math.PI, false);
+          ctx.fillStyle = node.color || '#0f0';
           ctx.fill();
-          ctx.fillStyle = '#000';
-          ctx.fillText(label, node.x + 10 / globalScale, node.y + 4 / globalScale);
+          // draw label
+          ctx.font = `${12 / globalScale}px Sans-Serif`;
+          ctx.fillStyle = '#fff';
+          ctx.fillText(node.id, node.x + 10 / globalScale, node.y + 4 / globalScale);
         }}
       />
     </div>
