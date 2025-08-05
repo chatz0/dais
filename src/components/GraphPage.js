@@ -1,75 +1,91 @@
-import React, { useEffect, useRef } from 'react';
-import ForceGraph2D from 'react-force-graph-2d';
-
-// Graph data
-const graphData = {
-  nodes: [
-    { id: 'cv', emoji: '🎓' },
-    { id: 'contact', emoji: '👤' },
-    { id: 'publications', emoji: '📚' },
-    { id: 'projects', emoji: '🗂️' },
-    { id: 'teaching', emoji: '📖' },
-    { id: 'work', emoji: '💼' }
-  ],
-  links: [
-    { source: 'cv', target: 'contact' },
-    { source: 'cv', target: 'publications' },
-    { source: 'cv', target: 'projects' },
-    { source: 'cv', target: 'teaching' },
-    { source: 'cv', target: 'work' }
-  ]
-};
+import React, { useRef, useEffect, useState } from 'react';
+import { ForceGraph2D } from 'react-force-graph';
+import { useNavigate } from 'react-router-dom';
 
 const GraphPage = () => {
+  const navigate = useNavigate();
   const graphRef = useRef();
 
+  // Base nodes
+  const [graphData, setGraphData] = useState({
+    nodes: [
+      { id: 'About', icon: `${process.env.PUBLIC_URL}/icons/ucd.png`, main: true },
+      { id: 'Research', icon: 'https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/google-scholar.svg', main: true },
+      { id: 'Teaching', icon: 'https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/linkedin.svg', main: true }
+    ],
+    links: [
+      { source: 'About', target: 'Research' },
+      { source: 'About', target: 'Teaching' }
+    ]
+  });
+
+  // Handle node clicks
+  const handleNodeClick = node => {
+    if (node.id === 'Research') {
+      setGraphData(prev => ({
+        nodes: [
+          ...prev.nodes,
+          { id: 'Publications', icon: 'https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/dblp.svg' },
+          { id: 'Projects', icon: 'https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/google-scholar.svg' }
+        ],
+        links: [
+          ...prev.links,
+          { source: 'Research', target: 'Publications' },
+          { source: 'Research', target: 'Projects' }
+        ]
+      }));
+    } else if (node.id === 'CV') {
+      navigate('/cv');
+    } else if (node.id === 'Contact') {
+      navigate('/contact');
+    }
+  };
+
+  // Floating animation
   useEffect(() => {
-    const graph = graphRef.current;
-
-    // Node repulsion and spacing
-    graph.d3Force('charge').strength(-250); // stronger negative = more spread
-    graph.d3Force('collide').radius(70).strength(0.9);
-
-    // Gentle floating animation
-    const floatAmplitude = 0.5; // pixels
-    const floatSpeed = 0.002; // oscillation speed
-    const animate = () => {
-      graphData.nodes.forEach((node, index) => {
-        node.x += Math.sin(Date.now() * floatSpeed + index) * floatAmplitude;
-        node.y += Math.cos(Date.now() * floatSpeed + index) * floatAmplitude;
-      });
-      graph.refresh(); // re-render graph with updated positions
-      requestAnimationFrame(animate);
-    };
-    animate();
+    const interval = setInterval(() => {
+      if (graphRef.current) {
+        graphRef.current.d3Force('charge').strength(-250); // repulsion for better spacing
+        graphRef.current.d3AlphaTarget(0.1);
+        graphRef.current.refresh();
+      }
+    }, 2000);
+    return () => clearInterval(interval);
   }, []);
 
   return (
-    <div style={{ height: '100vh', backgroundColor: '#111' }} className="force-graph-container">
+    <div style={{ width: '100vw', height: '100vh', backgroundColor: '#0a0a0a' }}>
       <ForceGraph2D
         ref={graphRef}
         graphData={graphData}
-        nodeLabel="id"
-        nodeAutoColorBy="id"
-        nodeCanvasObject={(node, ctx) => {
+        nodeCanvasObject={(node, ctx, globalScale) => {
           const size = 40;
+          const img = new Image();
+          img.src = node.icon;
 
-          // Draw circle with glow
+          ctx.save();
           ctx.beginPath();
           ctx.arc(node.x, node.y, size / 2, 0, 2 * Math.PI, false);
-          ctx.fillStyle = 'rgba(0, 255, 136, 0.8)';
-          ctx.shadowColor = '#00ff88';
-          ctx.shadowBlur = 15;
+          ctx.fillStyle = '#00ff88';
           ctx.fill();
+          ctx.closePath();
 
-          // Draw emoji text in the circle
-          ctx.font = '20px Arial';
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'middle';
-          ctx.fillStyle = '#000';
-          ctx.fillText(node.emoji, node.x, node.y);
+          img.onload = () => {
+            ctx.drawImage(img, node.x - size / 2, node.y - size / 2, size, size);
+          };
+          ctx.restore();
         }}
-        linkColor={() => 'rgba(255,255,255,0.2)'}
+        nodePointerAreaPaint={(node, color, ctx) => {
+          const size = 40;
+          ctx.fillStyle = color;
+          ctx.beginPath();
+          ctx.arc(node.x, node.y, size / 2, 0, 2 * Math.PI, false);
+          ctx.fill();
+        }}
+        linkColor={() => '#00ff88'}
+        linkWidth={2}
+        onNodeClick={handleNodeClick}
+        cooldownTicks={100}
       />
     </div>
   );
