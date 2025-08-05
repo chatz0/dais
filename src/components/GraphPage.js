@@ -1,65 +1,88 @@
-import React, { useRef, useEffect } from 'react';
-import ForceGraph2D from 'react-force-graph-2d';
-import * as d3 from 'd3-force'; // For collision force
+import React, { useEffect, useRef } from 'react';
+import { ForceGraph2D } from 'react-force-graph';
+import { useNavigate } from 'react-router-dom';
 
 const GraphPage = () => {
-  const fgRef = useRef();
+  const graphRef = useRef();
+  const navigate = useNavigate();
 
-  // Example graph data (replace with yours if stored elsewhere)
-  const graphData = {
+  // Graph data
+  const data = {
     nodes: [
-      { id: 'Research', emoji: '📚' },
-      { id: 'Teaching', emoji: '🎓' },
-      { id: 'CV', emoji: '💼' },
-      { id: 'Contact', emoji: '👤' },
-      { id: 'Publications', emoji: '📖' },
-      { id: 'Projects', emoji: '🗂️' }
+      { id: 'cv', icon: '🎓', link: '/cv' },
+      { id: 'contact', icon: '👤', link: '/contact' },
+      { id: 'research', icon: '📚', link: '/research' },
+      { id: 'projects', icon: '🗂️', link: '/projects' },
+      { id: 'teaching', icon: '📖', link: '/teaching' },
+      { id: 'work', icon: '💼', link: '/work' }
     ],
     links: [
-      { source: 'Research', target: 'Publications' },
-      { source: 'Research', target: 'Projects' },
-      { source: 'Teaching', target: 'CV' },
-      { source: 'CV', target: 'Contact' }
+      { source: 'cv', target: 'contact' },
+      { source: 'cv', target: 'research' },
+      { source: 'research', target: 'projects' },
+      { source: 'research', target: 'teaching' },
+      { source: 'projects', target: 'work' },
+      { source: 'work', target: 'contact' }
     ]
   };
 
   useEffect(() => {
-    if (fgRef.current) {
-      // Increase repulsion between nodes
-      fgRef.current.d3Force('charge').strength(-600);
+    if (graphRef.current) {
+      const fg = graphRef.current;
 
-      // Add collision detection to avoid overlapping nodes
-      fgRef.current.d3Force('collide', d3.forceCollide(80)); // 80px spacing
-
-      // Center force to keep graph visible
-      fgRef.current.d3Force('center', d3.forceCenter());
-
-      // Restart simulation to apply new forces
-      fgRef.current.d3ReheatSimulation();
+      // Adjust forces for better spacing
+      fg.d3Force('charge').strength(-500); // repulsion strength
+      fg.d3Force('link').distance(150);    // distance between linked nodes
+      fg.d3Force('center');                // center graph on canvas
     }
   }, []);
 
   return (
     <div style={{ height: '100vh', backgroundColor: '#111' }}>
-      <ForceGraph2D
-        ref={fgRef}
-        graphData={graphData}
-        width={window.innerWidth}
-        height={window.innerHeight}
-        nodeCanvasObject={(node, ctx, globalScale) => {
-          const label = node.emoji || node.id;
-          const fontSize = 24 / globalScale;
-          ctx.font = `${fontSize}px Sans-Serif`;
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'middle';
-          ctx.fillStyle = '#00ff88';
-          ctx.fillText(label, node.x, node.y);
-        }}
-        linkColor={() => '#00ff88'}
-        linkWidth={2}
-        cooldownTicks={100}
-        onEngineStop={() => fgRef.current.zoomToFit(400)}
-      />
+      <div className="force-graph-container" style={{ position: 'relative' }}>
+        <ForceGraph2D
+          ref={graphRef}
+          graphData={data}
+          nodeCanvasObject={(node, ctx) => {
+            const size = 40;
+
+            // Glow effect
+            ctx.beginPath();
+            ctx.arc(node.x, node.y, size * 0.6, 0, 2 * Math.PI, false);
+            ctx.fillStyle = 'rgba(0, 255, 136, 0.3)';
+            ctx.fill();
+
+            // Node circle
+            ctx.beginPath();
+            ctx.arc(node.x, node.y, size / 2, 0, 2 * Math.PI, false);
+            ctx.fillStyle = '#00cc66';
+            ctx.fill();
+            ctx.strokeStyle = '#00ff88';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            // Icon
+            ctx.font = `${size / 1.5}px Arial`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillStyle = '#000';
+            ctx.fillText(node.icon, node.x, node.y);
+          }}
+          nodePointerAreaPaint={(node, color, ctx) => {
+            ctx.fillStyle = color;
+            ctx.beginPath();
+            ctx.arc(node.x, node.y, 40, 0, 2 * Math.PI, false);
+            ctx.fill();
+          }}
+          onNodeClick={(node) => {
+            if (node.link) {
+              navigate(node.link);
+            }
+          }}
+          linkColor={() => 'rgba(255,255,255,0.2)'}
+          linkWidth={1.5}
+        />
+      </div>
     </div>
   );
 };
