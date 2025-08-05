@@ -4,10 +4,16 @@ set -e
 echo "🚀 Building the project..."
 npm run build
 
-echo "📦 Deploying build folder to gh-pages branch..."
-# Push only the build folder to gh-pages branch via subtree
-git add build -f
-git commit -m "Deploy build to gh-pages" || true
-git subtree push --prefix build origin gh-pages
+echo "📦 Preparing to deploy (force)..."
 
-echo "✅ Deployment complete! Site should be live at: https://chatz0.github.io/dais"
+# Split the build folder into a temporary branch
+git subtree split --prefix build -b gh-pages-temp
+
+# Force push that branch to remote gh-pages
+git push origin gh-pages-temp:gh-pages --force
+
+# Delete the temporary branch locally
+git branch -D gh-pages-temp
+
+echo "✅ Deployment complete! Your site should be live at: https://chatz0.github.io/dais"
+

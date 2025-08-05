@@ -1,71 +1,74 @@
 .header {
-  position: absolute;
-  top: 20px;
-  left: 20px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  font-size: 1.5rem;
-  color: white;
-  font-family: system-ui, -apple-system, sans-serif;
-}
-
-.header-photo {
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-  border: 2px solid white;
-  box-shadow: 0 0 8px rgba(0,0,0,0.3);
-}
-
-.typewriter {
-  overflow: hidden;
-  border-right: .15em solid #fff;
-  white-space: nowrap;
-  animation:
-    typing 2s steps(30, end),
-    blink-caret .75s step-end infinite;
-}
-
-/* Typewriter animations */
-@keyframes typing {
-  from { width: 0 }
-  to { width: 100% }
-}
-
-@keyframes blink-caret {
-  from, to { border-color: transparent }
-  50% { border-color: white }
-}
-
-.header {
     position: absolute;
     top: 20px;
     left: 20px;
     display: flex;
     align-items: center;
+    gap: 12px;
+    font-size: 1.5rem;
+    color: white;
+    font-family: system-ui, -apple-system, sans-serif;
     z-index: 1000;
-}
+  }
   
-.profile-container {
+  .profile-container {
     display: flex;
     align-items: center;
     gap: 10px;
-}
+  }
   
-.profile-pic {
+  .profile-pic {
     width: 60px;
     height: 60px;
     border-radius: 50%;
-    border: 3px solid #00ff88; /* Glow color matching graph nodes */
-    box-shadow: 0 0 8px #00ff88;
+    border: 3px solid #00ff88;  /* Glow border */
+    box-shadow: 0 0 10px #00ff88; /* Glow effect */
     object-fit: cover;
-}
+    background-color: #222; /* fallback if transparent image */
+  }
   
-.profile-title {
+  .profile-title {
     color: #ffffff;
     font-size: 1.2rem;
     font-weight: bold;
     font-family: system-ui, -apple-system, sans-serif;
-}
+  }
+  
+  /* Social icons container */
+  .social-icons {
+    display: flex;
+    gap: 10px;
+    margin-left: 15px;
+  }
+  
+  .social-icons img {
+    width: 28px;
+    height: 28px;
+    border-radius: 4px;
+    transition: transform 0.2s ease-in-out;
+  }
+  
+  .social-icons img:hover {
+    transform: scale(1.15);
+  }
+  
+  /* Typewriter effect */
+  .typewriter {
+    overflow: hidden;
+    border-right: .15em solid #fff;
+    white-space: nowrap;
+    animation:
+      typing 2s steps(30, end),
+      blink-caret .75s step-end infinite;
+  }
+  
+  @keyframes typing {
+    from { width: 0 }
+    to { width: 100% }
+  }
+  
+  @keyframes blink-caret {
+    from, to { border-color: transparent }
+    50% { border-color: white }
+  }
   
