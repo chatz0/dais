@@ -1,44 +1,41 @@
-import React, { useEffect, useRef } from 'react';
-import { ForceGraph2D } from 'react-force-graph';
-import { useNavigate } from 'react-router-dom';
-
-// Nodes with icons (CDN for LinkedIn/DBLP/Scholar, local for UCD)
-const nodes = [
-  {
-    id: 'cv',
-    name: 'CV',
-    icon: 'https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/linkedin.svg',
-  },
-  {
-    id: 'dblp',
-    name: 'DBLP',
-    icon: 'https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/dblp.svg',
-  },
-  {
-    id: 'scholar',
-    name: 'Google Scholar',
-    icon: 'https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/googlescholar.svg',
-  },
-  {
-    id: 'ucd',
-    name: 'UCD',
-    icon: `${process.env.PUBLIC_URL}/icons/ucd.png`, // Local icon
-  },
-];
-
-const links = [
-  { source: 'cv', target: 'dblp' },
-  { source: 'dblp', target: 'scholar' },
-  { source: 'scholar', target: 'ucd' },
-];
+import React, { useRef, useEffect } from 'react';
+import ForceGraph2D from 'react-force-graph-2d';
+import * as d3 from 'd3-force'; // For collision force
 
 const GraphPage = () => {
   const fgRef = useRef();
-  const navigate = useNavigate();
+
+  // Example graph data (replace with yours if stored elsewhere)
+  const graphData = {
+    nodes: [
+      { id: 'Research', emoji: '📚' },
+      { id: 'Teaching', emoji: '🎓' },
+      { id: 'CV', emoji: '💼' },
+      { id: 'Contact', emoji: '👤' },
+      { id: 'Publications', emoji: '📖' },
+      { id: 'Projects', emoji: '🗂️' }
+    ],
+    links: [
+      { source: 'Research', target: 'Publications' },
+      { source: 'Research', target: 'Projects' },
+      { source: 'Teaching', target: 'CV' },
+      { source: 'CV', target: 'Contact' }
+    ]
+  };
 
   useEffect(() => {
     if (fgRef.current) {
-      fgRef.current.d3Force('charge').strength(-200); // Spread out nodes
+      // Increase repulsion between nodes
+      fgRef.current.d3Force('charge').strength(-600);
+
+      // Add collision detection to avoid overlapping nodes
+      fgRef.current.d3Force('collide', d3.forceCollide(80)); // 80px spacing
+
+      // Center force to keep graph visible
+      fgRef.current.d3Force('center', d3.forceCenter());
+
+      // Restart simulation to apply new forces
+      fgRef.current.d3ReheatSimulation();
     }
   }, []);
 
@@ -46,22 +43,22 @@ const GraphPage = () => {
     <div style={{ height: '100vh', backgroundColor: '#111' }}>
       <ForceGraph2D
         ref={fgRef}
-        graphData={{ nodes, links }}
-        nodeCanvasObject={(node, ctx) => {
-          const img = new Image();
-          img.src = node.icon;
-          img.onload = () => {
-            ctx.drawImage(img, node.x - 15, node.y - 15, 30, 30); // Draw icon centered
-          };
-        }}
-        onNodeClick={(node) => {
-          // Handle clicks
-          if (node.id === 'cv') navigate('/cv');
-          else if (node.id === 'dblp') window.open('https://dblp.org/pid/135/6249.html', '_blank');
-          else if (node.id === 'scholar') window.open('https://scholar.google.com.hk/citations?hl=en&user=vXz1bl4AAAAJ', '_blank');
-          else if (node.id === 'ucd') window.open('https://www.ucd.ie/', '_blank');
+        graphData={graphData}
+        width={window.innerWidth}
+        height={window.innerHeight}
+        nodeCanvasObject={(node, ctx, globalScale) => {
+          const label = node.emoji || node.id;
+          const fontSize = 24 / globalScale;
+          ctx.font = `${fontSize}px Sans-Serif`;
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillStyle = '#00ff88';
+          ctx.fillText(label, node.x, node.y);
         }}
         linkColor={() => '#00ff88'}
+        linkWidth={2}
+        cooldownTicks={100}
+        onEngineStop={() => fgRef.current.zoomToFit(400)}
       />
     </div>
   );
