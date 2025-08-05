@@ -1,55 +1,44 @@
 // src/components/GraphPage.js
-import React from 'react';
-import ForceGraph2D from 'react-force-graph-2d';
+import React, { useRef, useEffect } from 'react';
+import ForceGraph3D from 'react-force-graph-3d';
 
 export default function GraphPage() {
-  // your nodes & links
+  const fgRef = useRef();
+
   const data = {
     nodes: [
-      { id: 'Home',    name: 'Home',    url: '/'      },
-      { id: 'CV',      name: 'CV',      url: '/cv'    },
+      { id: 'Home',    name: 'Home',    url: '/'       },
+      { id: 'CV',      name: 'CV',      url: '/cv'     },
       { id: 'Contact', name: 'Contact', url: '/contact'},
     ],
     links: [
       { source: 'Home',   target: 'CV'      },
       { source: 'Home',   target: 'Contact' },
-    ]
+    ],
   };
+
+  // once mounted, you can tweak physics if you like:
+  useEffect(() => {
+    const fg = fgRef.current;
+    fg.d3Force('charge').strength(-120);
+    fg.d3Force('link').distance(150);
+  }, []);
 
   return (
     <div style={{ width: '100vw', height: '100vh', background: '#111' }}>
-      <ForceGraph2D
+      <ForceGraph3D
+        ref={fgRef}
         graphData={data}
+        nodeLabel="name"
+        nodeAutoColorBy="id"
+        linkOpacity={0.4}
 
-        // physics
-        d3AlphaDecay={0.02}
-        d3VelocityDecay={0.3}
-        linkDistance={120}
-        nodeRelSize={12}
-
-        // styling
-        nodeCanvasObject={(node, ctx, scale) => {
-          const r = 12 / scale;
-          ctx.beginPath();
-          ctx.arc(node.x, node.y, r, 0, 2 * Math.PI, false);
-          ctx.fillStyle = '#0f0';
-          ctx.fill();
-          ctx.font = `${12 / scale}px sans-serif`;
-          ctx.fillStyle = '#fff';
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'middle';
-          ctx.fillText(node.name, node.x, node.y - r - 6);
-        }}
-        linkColor={() => 'rgba(255,255,255,0.2)'}
-        linkWidth={1}
-
-        // click behavior
         onNodeClick={node => {
           if (node.url) window.location.href = node.url;
         }}
 
-        // turn off default background so our div bg shows
-        backgroundColor="transparent"
+        // optional: make things float a bit
+        onEngineStop={() => fgRef.current.zoomToFit(400)}
       />
     </div>
   );
