@@ -1,53 +1,67 @@
 // src/components/GraphPage.js
 import React, { useEffect, useRef } from 'react';
 import ForceGraph2D from 'react-force-graph-2d';
-import graphData from '../data/graphData.json'; // your nodes & links
 
-const GraphPage = () => {
+export default function GraphPage() {
   const fgRef = useRef();
+
+  // Inline your graph data here
+  const data = {
+    nodes: [
+      { id: 'Home',     name: 'Home',     url: '/' },
+      { id: 'CV',       name: 'CV',       url: '/cv' },
+      { id: 'Contact',  name: 'Contact',  url: '/contact' }
+    ],
+    links: [
+      { source: 'Home',    target: 'CV'      },
+      { source: 'Home',    target: 'Contact' }
+    ]
+  };
 
   useEffect(() => {
     const fg = fgRef.current;
+    if (!fg) return;
 
-    // 1) stronger repulsion to prevent overlap
+    // 1) Stronger repulsion
     fg.d3Force('charge').strength(-200);
-
-    // 2) set link distance
+    // 2) Comfortable link length
     fg.d3Force('link').distance(120).strength(0.8);
-
-    // 3) slow down cooling so layout has time to settle
-    fgRef.current.d3VelocityDecay(0.3);
-
-    // 4) pull everything toward center
+    // 3) Slow cooling so it settles nicely
+    fg.d3VelocityDecay(0.3);
+    // 4) Gentle centering
     fg.d3Force('center').strength(0.05);
 
-    // re-heat simulation
-    fgRef.current.alpha(1).restart();
+    // Kick off the simulation
+    fg.alpha(1).restart();
   }, []);
 
   return (
-    <div className="force-graph-container" style={{ height: '100vh', width: '100vw' }}>
+    <div style={{ width: '100vw', height: '100vh', background: '#111' }}>
       <ForceGraph2D
         ref={fgRef}
-        graphData={graphData}
-        nodeAutoColorBy="group"
-        linkDirectionalParticles={2}
-        linkDirectionalParticleSpeed={0.005}
-        nodeCanvasObject={(node, ctx, globalScale) => {
-          const label = node.name;
-          const fontSize = 12/globalScale;
-          ctx.font = `${fontSize}px Sans-Serif`;
-          ctx.fillStyle = node.color;
+        graphData={data}
+        nodeRelSize={8}
+        linkColor={() => 'rgba(0,255,136,0.2)'}
+        linkWidth={1}
+        nodeCanvasObject={(node, ctx, scale) => {
+          const r = 8 / scale;
+          // draw node circle
           ctx.beginPath();
-          ctx.arc(node.x, node.y, 8, 0, 2 * Math.PI, false);
+          ctx.arc(node.x, node.y, r, 0, 2 * Math.PI, false);
+          ctx.fillStyle = '#0f0';
           ctx.fill();
+          // draw label
+          ctx.font = `${12/scale}px Sans-Serif`;
           ctx.fillStyle = '#fff';
-          ctx.fillText(label, node.x + 10, node.y + 4);
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(node.name, node.x, node.y - r - 6);
         }}
-        onNodeClick={node => window.open(node.url, '_blank')}
+        onNodeClick={node => {
+          if (node.url) window.location.href = node.url;
+        }}
+        backgroundColor="transparent"
       />
     </div>
   );
-};
-
-export default GraphPage;
+}
