@@ -9,29 +9,17 @@ npm run build
 
 echo "📦 Deploying build folder to gh-pages branch..."
 
-# Cleanup previous temp folder if it exists
-rm -rf /tmp/gh-pages
+# Initialize gh-pages branch if it doesn't exist
+git fetch origin
+if ! git show-ref --quiet refs/remotes/origin/gh-pages; then
+  echo "No gh-pages branch exists. Creating one..."
+  git checkout --orphan gh-pages
+  git reset --hard
+  git commit --allow-empty -m "Initial gh-pages commit"
+  git push origin gh-pages
+  git checkout main
+fi
 
-# Fetch latest gh-pages branch
-git fetch origin gh-pages || echo "No existing gh-pages branch"
-
-# Create a worktree for gh-pages
-git worktree add /tmp/gh-pages gh-pages
-
-# Clear old contents and copy new build
-rm -rf /tmp/gh-pages/*
-cp -R build/* /tmp/gh-pages/
-
-# Commit and push
-cd /tmp/gh-pages
-git add --all
-git commit -m "Deploy build to gh-pages" || echo "No changes to commit"
-git push origin gh-pages --force
-
-# Cleanup worktree
-cd -
-git worktree remove /tmp/gh-pages --force
-rm -rf /tmp/gh-pages
-
-echo "✅ Deployment complete! Your site should be live at: https://chatz0.github.io/dais"
+# Use gh-pages npm package to deploy
+npm run deploy
 
